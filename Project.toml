@@ -1,7 +1,7 @@
 name = "MinfluxIO"
 uuid = "4a51fabb-1a24-4c9e-9f5c-68f140d2c81e"
 version = "0.1.0"
-authors = ["Lance (Weiqing) Xu <lance.xwq@gmail.com> and contributors"]
+authors = ["Weiqing (Lance) Xu <lance.xwq@gmail.com> and contributors"]
 
 [workspace]
 projects = ["test", "benchmark"]

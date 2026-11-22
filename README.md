@@ -205,10 +205,11 @@ Python reader, together with the results so far.
 
 ## Acknowledgments
 
-MinfluxIO.jl was developed by Lance (Weiqing) Xu as a postdoctoral researcher
-in the Ries Lab (Jonas Ries, Max Perutz Labs, University of Vienna). The
-example MINFLUX data used to develop and test the package were recorded in the
-Ries Lab. These data are not distributed with the package.
+MinfluxIO.jl was developed in the
+[Ries Lab](https://maxperutzlabs.ac.at/research/research-groups/ries)
+(Jonas Ries, Max Perutz Labs, University of Vienna), where the example MINFLUX
+data used to develop and test the package were also recorded. These data are
+not distributed with the package.
 
 This project is not affiliated with or endorsed by Abberior Instruments.
 Abberior and Imspector are names of Abberior Instruments GmbH.
