@@ -2,7 +2,7 @@
 
 Read Abberior Imspector data in Julia: MINFLUX localizations embedded in `.msr`
 files, Imspector's MINFLUX `.npy` and `.mat` exports, and the image stacks of
-`.msr`/`.obf` files. Pure Julia. No Imspector, Python or Java needed.
+`.msr`/`.obf` files. No Imspector, Python or Java needed.
 
 ## Installation
 
@@ -39,6 +39,9 @@ df = DataFrame(t)                # loc is split into loc_x, loc_y, loc_z
 beads(d)                         # bead (MBM) grid points: gri, xyz, tim, str
 d.attributes                     # measurement metadata (lasers, sequence, grids, ...)
 ```
+
+Loading a 21 MB `.msr` with 725k records takes about 70 ms. Decompression runs
+on several threads when Julia is started with them, e.g. `julia -t auto`.
 
 If a file holds several MINFLUX measurements, list them with
 `minflux_measurements(path)` and choose one with
