@@ -29,5 +29,6 @@ include("zarr.jl")
 include("npy.jl")
 include("minflux.jl")
 include("tables.jl")
+include("precompile.jl")
 
 end
