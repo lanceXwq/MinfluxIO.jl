@@ -125,19 +125,27 @@ function read_zarr_array(c::MfxContainer, path::AbstractString)
     compressor = get(meta, "compressor", nothing)
     fill = _fill_bytes(get(meta, "fill_value", nothing), itemsize, T)
 
-    buf = Vector{UInt8}(undef, n * itemsize)
-    for ci in 0:cld(n, chunk)-1
-        lo = ci * chunk
-        k = min(chunk, n - lo)
+    # Zarr v2 stores every chunk at full size (the last one padded), so decode
+    # into a buffer padded to whole chunks; zlib chunks inflate straight into it.
+    nchunks = cld(n, chunk)
+    csize = chunk * itemsize
+    buf = Vector{UInt8}(undef, nchunks * csize)
+    zlib = compressor !== nothing && compressor["id"] == "zlib"
+    for ci in 0:nchunks-1
         ckey = string(path, "/", ci)
-        if haskey(c.files, ckey)
-            dec = _decode_chunk(c.files[ckey], compressor)
-            length(dec) >= k * itemsize || error("$path: chunk $ci is too short")
-            copyto!(buf, lo * itemsize + 1, dec, 1, k * itemsize)
-        else
-            for j in 0:k-1
-                copyto!(buf, (lo + j) * itemsize + 1, fill, 1, itemsize)
+        lo = ci * csize
+        if !haskey(c.files, ckey)
+            for j in 0:chunk-1
+                copyto!(buf, lo + j * itemsize + 1, fill, 1, itemsize)
             end
+        elseif zlib
+            m = _inflate!(buf, lo, csize, c.files[ckey])
+            m < 0 && error("$path: chunk $ci is larger than the chunk size")
+            m >= min(chunk, n - ci * chunk) * itemsize || error("$path: chunk $ci is too short")
+        else
+            dec = _decode_chunk(c.files[ckey], compressor)
+            length(dec) >= min(csize, (n - ci * chunk) * itemsize) || error("$path: chunk $ci is too short")
+            copyto!(buf, lo + 1, dec, 1, min(csize, length(dec)))
         end
     end
 

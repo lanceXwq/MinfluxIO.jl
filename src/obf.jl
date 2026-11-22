@@ -319,7 +319,10 @@ function read_stack_bytes(f::ObfFile, s::ObfStack)
         read(io, s.data_length)
     end
     s.compression == 0 && return raw
-    s.compression == 1 && return transcode(ZlibDecompressor, raw)
+    if s.compression == 1
+        expected = s.eltype === nothing ? 0 : prod(s.size) * sizeof(s.eltype)
+        return _zlib_inflate(raw, expected)
+    end
     error("unknown OBF compression type $(s.compression)")
 end
 read_stack_bytes(f::ObfFile, which::Union{Integer,AbstractString}) = read_stack_bytes(f, f[which])
