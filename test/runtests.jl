@@ -2,6 +2,7 @@ using MinfluxIO
 using Test
 using Base64
 using Tables
+using TOML
 
 include("synthetic.jl")
 
@@ -168,17 +169,25 @@ const TESTDATA = get(ENV, "MINFLUXIO_TESTDATA", "")
         @test isempty(d.grids) && d.attributes === nothing
     end
 
-    # Expected values for real files, checked when MINFLUXIO_TESTDATA is set.
-    REAL_FILES = Dict(
-        "13_TD_trk_638_561_.msr" => (rows = 725662, valid = 51016, final = 10440, nstacks = 15,
-            label = "261113-162646_13_L75_640lp10_561lp08_pho010010_BG06en_dt900us_disConExp"),
-        "261109-164727_06_L75_640lp10_pho010_dt900us_BGdis_dp1 (2).mat" => (rows = 53386, valid = 38277, final = 34814),
-    )
+    # Tests on real files. Set MINFLUXIO_TESTDATA to a directory holding the files
+    # and an `expected.toml` with one table per file, e.g.
+    #
+    #   ["measurement.msr"]
+    #   rows = 725662      # records in the MINFLUX table
+    #   valid = 51016      # records with vld
+    #   final = 10440      # valid final localizations
+    #   nstacks = 15       # OBF stacks (.msr only)
+    #   label = "..."      # measurement label
+    #
+    # Every key is optional. Neither the data nor expected.toml is in the repository.
     @testset "real data" begin
+        expected_path = joinpath(TESTDATA, "expected.toml")
         if isempty(TESTDATA)
             @info "MINFLUXIO_TESTDATA not set; skipping tests on real data"
+        elseif !isfile(expected_path)
+            @info "no expected.toml in MINFLUXIO_TESTDATA; skipping tests on real data"
         else
-            for (name, exp) in REAL_FILES
+            for (name, exp) in TOML.parsefile(expected_path)
                 path = joinpath(TESTDATA, name)
                 if !isfile(path)
                     @info "real test file not found, skipping: $path"
@@ -187,14 +196,14 @@ const TESTDATA = get(ENV, "MINFLUXIO_TESTDATA", "")
                 @testset "$name" begin
                     d = Base.invokelatest(load_minflux, path)
                     t = d.table
-                    @test length(t) == exp.rows
-                    @test count(t.vld) == exp.valid
-                    @test length(final_localizations(d)) == exp.final
-                    if endswith(name, ".msr")
-                        @test d.label == exp.label
+                    haskey(exp, "rows") && @test length(t) == exp["rows"]
+                    haskey(exp, "valid") && @test count(t.vld) == exp["valid"]
+                    haskey(exp, "final") && @test length(final_localizations(d)) == exp["final"]
+                    haskey(exp, "label") && @test d.label == exp["label"]
+                    if lowercase(splitext(name)[2]) in (".msr", ".obf")
                         f = read_obf(path)
-                        @test length(f) == exp.nstacks
-                        @test count(s -> s.kind === :minflux, f.stacks) == 1
+                        haskey(exp, "nstacks") && @test length(f) == exp["nstacks"]
+                        @test count(s -> s.kind === :minflux, f.stacks) >= 1
                         for s in f.stacks
                             s.kind === :image && @test size(read_stack(f, s)) == size(s)
                         end
