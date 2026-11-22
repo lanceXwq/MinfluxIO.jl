@@ -126,12 +126,13 @@ function read_zarr_array(c::MfxContainer, path::AbstractString)
     fill = _fill_bytes(get(meta, "fill_value", nothing), itemsize, T)
 
     # Zarr v2 stores every chunk at full size (the last one padded), so decode
-    # into a buffer padded to whole chunks; zlib chunks inflate straight into it.
+    # into a buffer padded to whole chunks; zlib chunks inflate straight into it,
+    # in parallel when Julia runs with several threads.
     nchunks = cld(n, chunk)
     csize = chunk * itemsize
     buf = Vector{UInt8}(undef, nchunks * csize)
     zlib = compressor !== nothing && compressor["id"] == "zlib"
-    for ci in 0:nchunks-1
+    _foreach_maybe_threaded(0:nchunks-1) do ci
         ckey = string(path, "/", ci)
         lo = ci * csize
         if !haskey(c.files, ckey)
@@ -150,6 +151,19 @@ function read_zarr_array(c::MfxContainer, path::AbstractString)
     end
 
     return _decode_records(buf, fields, itemsize, n, T)
+end
+
+# Run `f` on each element, using threads only if Julia has more than one (so
+# that, single-threaded, errors are not wrapped in a TaskFailedException).
+function _foreach_maybe_threaded(f, itr)
+    if Threads.nthreads() > 1 && length(itr) > 1
+        Threads.@threads for x in itr
+            f(x)
+        end
+    else
+        foreach(f, itr)
+    end
+    return nothing
 end
 
 # Decode `n` packed records of a (plain or structured) dtype from `buf`.
