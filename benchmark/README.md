@@ -8,9 +8,10 @@ and compare it with a NumPy-based Python reader that decodes the same data.
 **Machine and software:** Apple M1 Pro (8 performance + 2 efficiency cores),
 16 GiB RAM, macOS 27.2. Julia 1.13.4; Python 3.15.2 with NumPy 2.5.5.
 
-**Test file:** a 21 MB `.msr` written by Imspector 2026.7 (MINFLUX build). It
-holds 725,662 MINFLUX records, 10,440 of them valid final localizations, plus
-14 image stacks. The file is not part of this repository.
+**Test file:** a 21 MB `.msr` recorded in the Ries Lab and written by
+Imspector 2026.7 (MINFLUX build). It holds 725,662 MINFLUX records, 10,440 of
+them valid final localizations, plus 14 image stacks. The file is not part of
+this repository.
 
 | | Julia, 1 thread | Julia, 4 threads | Python + NumPy |
 |---|---|---|---|
