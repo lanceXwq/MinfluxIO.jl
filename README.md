@@ -1,5 +1,7 @@
 # MinfluxIO.jl
 
+[![CI](https://github.com/lanceXwq/MinfluxIO.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/lanceXwq/MinfluxIO.jl/actions/workflows/CI.yml?query=branch%3Amain)
+
 Read Abberior Imspector data in Julia: MINFLUX localizations embedded in `.msr`
 files, Imspector's MINFLUX `.npy` and `.mat` exports, and the image stacks of
 `.msr`/`.obf` files. No Imspector, Python or Java needed.
