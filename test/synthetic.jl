@@ -1,5 +1,4 @@
-# Writers for small synthetic OBF/MSR files with embedded MINFLUX data blocks,
-# mimicking what Imspector produces, so the readers can be tested without real data.
+# Writers for small synthetic OBF/MSR files with embedded MINFLUX data blocks, mimicking what Imspector produces, so the readers can be tested without real data.
 
 using CodecZlib: ZlibCompressor
 using Blosc: Blosc
@@ -26,8 +25,7 @@ function kv_bytes(d::AbstractDict)
     append!(out, le(UInt32(0)))
 end
 
-# One OBF stack (format version 7-like footer, including 60 bytes of unknown
-# trailing footer fields as seen in real files). The `next` pointer is at byte 360.
+# One OBF stack (format version 7-like footer, including 60 bytes of unknown trailing footer fields as seen in real files). The `next` pointer is at byte 360.
 function stack_blob(name, data::AbstractArray{T}; compress = true, labels = nothing,
         pixel = 1e-7, tags = Dict{String,String}(), raw_bytes = nothing) where {T}
     rank = ndims(data)
@@ -84,8 +82,7 @@ function obf_bytes(blobs::Vector{Vector{UInt8}}; metadata = Dict("ome_xml" => "<
     return out
 end
 
-# A serialized MFXDTA block. `entries` is a vector of path => bytes (or `nothing`
-# for a directory).
+# A serialized MFXDTA block. `entries` is a vector of path => bytes (or `nothing` for a directory).
 function mfxdta_bytes(entries)
     out = UInt8[]
     append!(out, b"MFXDTA\0", le(UInt32(3)), le(UInt32(1_794_585_388)))
@@ -145,8 +142,7 @@ function zarray_json(dtype_json, n, chunk, compressor_json, itemsize)
     """{"chunks":[$chunk],"compressor":$compressor_json,"dtype":$dtype_json,"fill_value":$fill,"filters":null,"order":"C","shape":[$n],"zarr_format":2}"""
 end
 
-# MINFLUX store with an `mfx` table (zlib chunks, one chunk left out on purpose
-# when `drop_chunk`), a bead grid with blosc-compressed points, and attributes.
+# MINFLUX store with an `mfx` table (zlib chunks, one chunk left out on purpose when `drop_chunk`), a bead grid with blosc-compressed points, and attributes.
 function minflux_store(label; n = 25, chunk = 10, drop_chunk = false)
     buf, cols = mfx_records(n)
     entries = Any["zarr" => nothing,

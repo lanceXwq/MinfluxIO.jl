@@ -1,9 +1,6 @@
-# NumPy dtype handling (shared with the .npy reader) and a minimal reader for the
-# Zarr v2 arrays inside a MINFLUX data block.
+# NumPy dtype handling (shared with the .npy reader) and a minimal reader for the Zarr v2 arrays inside a MINFLUX data block.
 #
-# Supports what Imspector writes: 1-D arrays of plain or structured (record)
-# NumPy dtypes, little-endian, compressed with zlib, gzip or blosc (or not at all),
-# without filters. A general Zarr implementation is not needed for these files.
+# Supports what Imspector writes: 1-D arrays of plain or structured (record) NumPy dtypes, little-endian, compressed with zlib, gzip or blosc (or not at all), without filters. A general Zarr implementation is not needed for these files.
 
 struct ZarrField
     name::Symbol
@@ -82,11 +79,7 @@ function _fill_bytes(fill, itemsize::Int, T)
     return Vector{UInt8}(reinterpret(UInt8, [htol(v)]))
 end
 
-# Copy rows `lo:hi` of a field (starting `offset` bytes into each record, `k`
-# values per record) from the packed records in `buf` into `out`, which holds the
-# column as an n × k matrix in column-major order (sub-arrays flattened in C
-# order). Values are read directly from the record buffer; unaligned loads are
-# fine because `unsafe_load` uses alignment 1.
+# Copy rows `lo:hi` of a field (starting `offset` bytes into each record, `k` values per record) from the packed records in `buf` into `out`, which holds the column as an n × k matrix in column-major order (sub-arrays flattened in C order). Values are read directly from the record buffer; unaligned loads are fine because `unsafe_load` uses alignment 1.
 function _extract_rows!(out::Vector{T}, buf::Vector{UInt8}, itemsize::Int, n::Int,
         offset::Int, k::Int, lo::Int, hi::Int) where {T}
     GC.@preserve buf begin
@@ -133,9 +126,7 @@ end
 """
     read_zarr_array(c::MfxContainer, path)
 
-Read a 1-D Zarr array from a MINFLUX data block, with its native element types.
-A plain dtype gives a `Vector`; a structured (record) dtype gives a `NamedTuple`
-of columns, where fields with a sub-array shape `(k,)` become `n × k` matrices.
+Read a 1-D Zarr array from a MINFLUX data block, with its native element types. A plain dtype gives a `Vector`; a structured (record) dtype gives a `NamedTuple` of columns, where fields with a sub-array shape `(k,)` become `n × k` matrices.
 """
 function read_zarr_array(c::MfxContainer, path::AbstractString)
     key = string(path, "/.zarray")
@@ -152,9 +143,7 @@ function read_zarr_array(c::MfxContainer, path::AbstractString)
     compressor = get(meta, "compressor", nothing)
     fill = _fill_bytes(get(meta, "fill_value", nothing), itemsize, T)
 
-    # Zarr v2 stores every chunk at full size (the last one padded), so decode
-    # into a buffer padded to whole chunks; zlib chunks inflate straight into it,
-    # in parallel when Julia runs with several threads.
+    # Zarr v2 stores every chunk at full size (the last one padded), so decode into a buffer padded to whole chunks; zlib chunks inflate straight into it, in parallel when Julia runs with several threads.
     nchunks = cld(n, chunk)
     csize = chunk * itemsize
     buf = Vector{UInt8}(undef, nchunks * csize)
@@ -180,8 +169,7 @@ function read_zarr_array(c::MfxContainer, path::AbstractString)
     return _decode_records(buf, fields, itemsize, n, T)
 end
 
-# Run `f` on each element, using threads only if Julia has more than one (so
-# that, single-threaded, errors are not wrapped in a TaskFailedException).
+# Run `f` on each element, using threads only if Julia has more than one (so that, single-threaded, errors are not wrapped in a TaskFailedException).
 function _foreach_maybe_threaded(f, itr)
     if Threads.nthreads() > 1 && length(itr) > 1
         Threads.@threads for x in itr
@@ -199,8 +187,7 @@ function _decode_records(buf::Vector{UInt8}, fields, itemsize::Int, n::Int, T)
     fields === nothing && return _extract_field(T, buf, itemsize, n, 0, 1)
     ks = [prod(f.shape) for f in fields]
     cols = [Vector{f.T}(undef, n * k) for (f, k) in zip(fields, ks)]
-    # Work through the records in cache-sized blocks, extracting every field from
-    # one block before moving on, instead of one full pass over `buf` per field.
+    # Work through the records in cache-sized blocks, extracting every field from one block before moving on, instead of one full pass over `buf` per field.
     block = max(1, (256 * 1024) ÷ itemsize)
     for lo in 1:block:n
         hi = min(n, lo + block - 1)

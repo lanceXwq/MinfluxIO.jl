@@ -3,8 +3,7 @@
 
 Read Abberior Imspector files in Julia:
 
-- `.msr` / `.obf` files: image stacks ([`read_obf`](@ref), [`read_stack`](@ref)) and
-  embedded MINFLUX data ([`load_minflux`](@ref))
+- `.msr` / `.obf` files: image stacks ([`read_obf`](@ref), [`read_stack`](@ref)) and embedded MINFLUX data ([`load_minflux`](@ref))
 - Imspector MINFLUX exports as `.npy` or `.mat` ([`load_minflux`](@ref); `.mat` needs `using MAT`)
 """
 module MinfluxIO

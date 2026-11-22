@@ -1,6 +1,4 @@
-# Precompilation workload: run the MINFLUX loading code on a tiny in-memory data
-# block with Imspector's field layout, so the first `load_minflux` call in a
-# session does not have to compile it.
+# Precompilation workload: run the MINFLUX loading code on a tiny in-memory data block with Imspector's field layout, so the first `load_minflux` call in a session does not have to compile it.
 
 using PrecompileTools: @setup_workload, @compile_workload
 using CodecZlib: ZlibCompressor
@@ -40,8 +38,7 @@ using CodecZlib: ZlibCompressor
     end
 end
 
-# File-level entry points (their file-reading parts need a real file, so these
-# are only compiled as far as type inference reaches).
+# File-level entry points (their file-reading parts need a real file, so these are only compiled as far as type inference reaches).
 precompile(read_obf, (String,))
 precompile(read_stack, (ObfFile, Int))
 precompile(read_stack, (ObfFile, String))

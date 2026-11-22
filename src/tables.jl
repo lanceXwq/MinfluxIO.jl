@@ -1,5 +1,4 @@
-# Tables.jl interface for MinfluxTable: matrix-valued columns (e.g. `loc`, n × 3)
-# are split into one column per component.
+# Tables.jl interface for MinfluxTable: matrix-valued columns (e.g. `loc`, n × 3) are split into one column per component.
 
 const _XYZ = ("x", "y", "z")
 

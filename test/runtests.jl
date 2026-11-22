@@ -6,8 +6,7 @@ using TOML
 
 include("synthetic.jl")
 
-# Optional tests on real data: set MINFLUXIO_TESTDATA to a directory holding the
-# files listed in `REAL_FILES` (they are not part of the repository).
+# Optional tests on real data: set MINFLUXIO_TESTDATA to a directory holding the files listed in `REAL_FILES` (they are not part of the repository).
 const TESTDATA = get(ENV, "MINFLUXIO_TESTDATA", "")
 
 @testset "MinfluxIO.jl" begin
@@ -169,8 +168,7 @@ const TESTDATA = get(ENV, "MINFLUXIO_TESTDATA", "")
         @test isempty(d.grids) && d.attributes === nothing
     end
 
-    # Tests on real files. Set MINFLUXIO_TESTDATA to a directory holding the files
-    # and an `expected.toml` with one table per file, e.g.
+    # Tests on real files. Set MINFLUXIO_TESTDATA to a directory holding the files and an `expected.toml` with one table per file, e.g.
     #
     #   ["measurement.msr"]
     #   rows = 725662      # records in the MINFLUX table

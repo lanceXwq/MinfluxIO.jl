@@ -1,7 +1,6 @@
 # Reading of Imspector MINFLUX .mat exports (loaded together with MAT.jl).
 #
-# Imspector writes one MATLAB variable per MINFLUX field (vld, fnl, tim, loc, ...),
-# each with one row per record; vector-valued fields such as `loc` are n × 3.
+# Imspector writes one MATLAB variable per MINFLUX field (vld, fnl, tim, loc, ...), each with one row per record; vector-valued fields such as `loc` are n × 3.
 module MinfluxIOMATExt
 
 using MinfluxIO

@@ -3,8 +3,7 @@
 #   julia --project=benchmark benchmark/bench.jl path/to/file.msr
 #   julia -t 4 --project=benchmark benchmark/bench.jl path/to/file.msr
 #
-# Run it in a fresh process: the first measurement is the first call in the
-# session (including any compilation left after precompilation).
+# Run it in a fresh process: the first measurement is the first call in the session (including any compilation left after precompilation).
 
 t_using = @elapsed using MinfluxIO
 using BenchmarkTools

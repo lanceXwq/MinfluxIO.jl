@@ -2,9 +2,7 @@
 #
 # The layout follows the official specification:
 #   https://imspectordocs.readthedocs.io/en/latest/fileformat.html
-# All structures are packed (no padding) and little-endian. An .msr file is an
-# OBF file with extra Imspector-specific data appended after the OBF metadata
-# section; that extra data is not interpreted here.
+# All structures are packed (no padding) and little-endian. An .msr file is an OBF file with extra Imspector-specific data appended after the OBF metadata section; that extra data is not interpreted here.
 
 const OBF_FILE_MAGIC = b"OMAS_BF\n\xff\xff"
 const OBF_STACK_MAGIC = b"OMAS_BF_STACK\n\xff\xff"
@@ -37,8 +35,7 @@ end
 """
     SIUnit
 
-Physical unit of an OBF stack axis or of its values. Holds the rational exponents
-of the SI base units (m, kg, s, A, K, mol, cd, rad, sr) and a scale factor.
+Physical unit of an OBF stack axis or of its values. Holds the rational exponents of the SI base units (m, kg, s, A, K, mol, cd, rad, sr) and a scale factor.
 """
 struct SIUnit
     exponents::NTuple{9,Rational{Int}}
@@ -75,13 +72,11 @@ end
 """
     ObfStack
 
-Header information of one data stack in an OBF/MSR file (the data itself is read
-on demand with [`read_stack`](@ref)).
+Header information of one data stack in an OBF/MSR file (the data itself is read on demand with [`read_stack`](@ref)).
 
 Useful fields:
 - `index`, `name`, `description`
-- `size`: number of samples along each dimension (first dimension varies fastest,
-  which matches Julia's column-major order)
+- `size`: number of samples along each dimension (first dimension varies fastest, which matches Julia's column-major order)
 - `lengths`, `offsets`: physical extent and offset of each dimension
 - `labels`: dimension labels, e.g. `"ExpControl X"`
 - `units`: [`SIUnit`](@ref) of each dimension; `value_unit`: unit of the values
@@ -123,16 +118,14 @@ Base.ndims(s::ObfStack) = length(s.size)
 """
     pixelsize(stack::ObfStack)
 
-Physical size of one sample along each dimension (`lengths ./ size`), in the units
-given by `stack.units`.
+Physical size of one sample along each dimension (`lengths ./ size`), in the units given by `stack.units`.
 """
 pixelsize(s::ObfStack) = s.lengths ./ s.size
 
 """
     ObfFile
 
-An opened OBF/MSR file: file-level header information plus the list of
-[`ObfStack`](@ref)s. Index it with an integer or a stack name to get a stack.
+An opened OBF/MSR file: file-level header information plus the list of [`ObfStack`](@ref)s. Index it with an integer or a stack name to get a stack.
 """
 struct ObfFile
     path::String
@@ -154,9 +147,7 @@ function _find_stack(f::ObfFile, name::AbstractString)
     return f.stacks[only(hits)]
 end
 
-# Key/value list: <u32 key len><key><u32 value len><value> ..., terminated by a
-# zero u32 or by `stop`. Used for the stack tag dictionary and (empirically) for
-# the file-level metadata section.
+# Key/value list: <u32 key len><key><u32 value len><value> ..., terminated by a zero u32 or by `stop`. Used for the stack tag dictionary and (empirically) for the file-level metadata section.
 function _read_kv(io::IO, stop::Integer)
     d = Dict{String,String}()
     while stop - position(io) >= 4
@@ -222,8 +213,7 @@ function _read_stack_header(io::IO, pos::Int, index::Int)
     chunks = Tuple{Int,Int}[]
 
     if fv >= 1
-        # Stack footer. Fields were appended over format versions, so read each
-        # one only if the footer (whose size is stored first) is large enough.
+        # Stack footer. Fields were appended over format versions, so read each one only if the footer (whose size is stored first) is large enough.
         footer_start = data_off + data_len
         seek(io, footer_start)
         fsz = Int(_rd(io, UInt32))
@@ -272,9 +262,7 @@ end
 """
     read_obf(path) -> ObfFile
 
-Read the header information of an Imspector `.obf` or `.msr` file: the file-level
-metadata (e.g. `"ome_xml"`) and the list of data stacks. Stack data is not loaded;
-use [`read_stack`](@ref) for that.
+Read the header information of an Imspector `.obf` or `.msr` file: the file-level metadata (e.g. `"ome_xml"`) and the list of data stacks. Stack data is not loaded; use [`read_stack`](@ref) for that.
 """
 function read_obf(path::AbstractString)
     fsize = filesize(path)
@@ -308,8 +296,7 @@ end
 """
     read_stack_bytes(f::ObfFile, stack) -> Vector{UInt8}
 
-Raw (decompressed) bytes of a stack. `stack` may be an [`ObfStack`](@ref), an
-index or a name.
+Raw (decompressed) bytes of a stack. `stack` may be an [`ObfStack`](@ref), an index or a name.
 """
 function read_stack_bytes(f::ObfFile, s::ObfStack)
     isempty(s.chunk_positions) ||
@@ -331,10 +318,7 @@ read_stack_bytes(f::ObfFile, which::Union{Integer,AbstractString}) = read_stack_
     read_stack(f::ObfFile, stack) -> Array
     read_stack(path, stack) -> Array
 
-Read the data of a stack as an `Array` with `size(stack)`. `stack` may be an
-[`ObfStack`](@ref), an index or a name. The first array dimension is the first
-OBF dimension (usually x). Trailing singleton dimensions are kept; use `dropdims`
-to remove them.
+Read the data of a stack as an `Array` with `size(stack)`. `stack` may be an [`ObfStack`](@ref), an index or a name. The first array dimension is the first OBF dimension (usually x). Trailing singleton dimensions are kept; use `dropdims` to remove them.
 """
 function read_stack(f::ObfFile, s::ObfStack)
     T = s.eltype

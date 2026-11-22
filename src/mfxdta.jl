@@ -1,10 +1,6 @@
 # Reader for the MINFLUX data block ("MFXDTA") that Imspector embeds in .msr files.
 #
-# This format is not publicly documented; the layout below was inferred from
-# example files written by Imspector 2026.7 (MINFLUX build) and may change
-# between Imspector versions. The block is stored as an
-# (otherwise meaningless) UInt8 OBF stack and contains a serialized Zarr v2
-# directory tree:
+# This format is not publicly documented; the layout below was inferred from example files written by Imspector 2026.7 (MINFLUX build) and may change between Imspector versions. The block is stored as an (otherwise meaningless) UInt8 OBF stack and contains a serialized Zarr v2 directory tree:
 #
 #   "MFXDTA\0"          7-byte magic
 #   UInt32              version (3 in the files seen so far)
@@ -20,12 +16,9 @@ const MFXDTA_MAGIC = b"MFXDTA\0"
 """
     MfxContainer
 
-The unpacked contents of an embedded MINFLUX data block: the files of the Zarr v2
-store (`files`, path => bytes), its directories (`dirs`), the block `version` and
-`timestamp` (UTC; appears to be the time the data were written).
+The unpacked contents of an embedded MINFLUX data block: the files of the Zarr v2 store (`files`, path => bytes), its directories (`dirs`), the block `version` and `timestamp` (UTC; appears to be the time the data were written).
 
-Arrays in it can be read with [`read_zarr_array`](@ref) and attributes with
-[`read_zarr_attrs`](@ref), e.g. `read_zarr_array(c, "zarr/mfx")`.
+Arrays in it can be read with [`read_zarr_array`](@ref) and attributes with [`read_zarr_attrs`](@ref), e.g. `read_zarr_array(c, "zarr/mfx")`.
 """
 struct MfxContainer
     version::Int
@@ -37,8 +30,7 @@ end
 """
     parse_mfxdta(bytes) -> MfxContainer
 
-Unpack an embedded MINFLUX data block (the decompressed bytes of an OBF stack whose
-`kind` is `:minflux`).
+Unpack an embedded MINFLUX data block (the decompressed bytes of an OBF stack whose `kind` is `:minflux`).
 """
 function parse_mfxdta(bytes::AbstractVector{UInt8})
     bytes isa Vector{UInt8} || (bytes = Vector{UInt8}(bytes))
@@ -50,8 +42,7 @@ function parse_mfxdta(bytes::AbstractVector{UInt8})
     version = Int(_rd(io, UInt32))
     timestamp = unix2datetime(_rd(io, UInt32))
 
-    # The first record is the "zarr" root directory; locate it rather than relying
-    # on a fixed header length.
+    # The first record is the "zarr" root directory; locate it rather than relying on a fixed header length.
     marker = vcat(reinterpret(UInt8, [htol(UInt64(4))]), Vector{UInt8}("zarr"))
     r = findnext(marker, bytes, nm + 9)
     r === nothing && error("MINFLUX data block (version $version): no Zarr store found")

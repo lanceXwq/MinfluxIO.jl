@@ -1,6 +1,9 @@
 """Generate the small NumPy-written .npy test fixtures used by test/runtests.jl.
 
-Run with any Python that has NumPy:  python generate_npy_fixtures.py
+Run with any Python that has NumPy:
+
+    python generate_npy_fixtures.py
+
 Values follow the formulas in `mfx_records` (test/synthetic.jl), with i = 1..n.
 """
 import os

@@ -2,21 +2,14 @@
 
 [![CI](https://github.com/lanceXwq/MinfluxIO.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/lanceXwq/MinfluxIO.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
-Read Abberior Imspector data in Julia: MINFLUX localizations embedded in `.msr`
-files, Imspector's MINFLUX `.npy` and `.mat` exports, and the image stacks of
-`.msr`/`.obf` files. No Imspector, Python or Java needed.
+Read Abberior Imspector data in Julia: MINFLUX localizations embedded in `.msr` files, Imspector's MINFLUX `.npy` and `.mat` exports, and the image stacks of `.msr`/`.obf` files. No Imspector, Python or Java needed.
 
 > [!WARNING]
-> This package is experimental. Use it at your own risk. Its API may change
-> without notice, and the MINFLUX reader relies on an undocumented file format
-> that may change between Imspector versions. Check results against Imspector
-> before relying on them.
+> This package is experimental. Use it at your own risk. Its API may change without notice, and the MINFLUX reader relies on an undocumented file format that may change between Imspector versions. Check results against Imspector before relying on them.
 
 ## Installation
 
-MinfluxIO needs Julia 1.10 or newer. It is tested on Linux, macOS and Windows.
-The package is not yet in Julia's General registry, so install it from its
-GitHub URL. In the Julia REPL, press `]` to enter package mode, then run:
+MinfluxIO needs Julia 1.10 or newer. It is tested on Linux, macOS and Windows. The package is not yet in Julia's General registry, so install it from its GitHub URL. In the Julia REPL, press `]` to enter package mode, then run:
 
 ```
 pkg> add https://github.com/lanceXwq/MinfluxIO.jl
@@ -31,15 +24,12 @@ Pkg.add(url = "https://github.com/lanceXwq/MinfluxIO.jl")
 
 Optional packages:
 
-- [MAT.jl](https://github.com/JuliaIO/MAT.jl) to read `.mat` exports:
-  `pkg> add MAT`
-- [DataFrames.jl](https://github.com/JuliaData/DataFrames.jl) to work with the
-  localization table as a `DataFrame`: `pkg> add DataFrames`
+- [MAT.jl](https://github.com/JuliaIO/MAT.jl) to read `.mat` exports: `pkg> add MAT`
+- [DataFrames.jl](https://github.com/JuliaData/DataFrames.jl) to work with the localization table as a `DataFrame`: `pkg> add DataFrames`
 
 To update to the latest version on GitHub, run `pkg> update MinfluxIO`.
 
-To work on the package itself, clone it as a development copy (to
-`~/.julia/dev/MinfluxIO` by default) and run the tests:
+To work on the package itself, clone it as a development copy (to `~/.julia/dev/MinfluxIO` by default) and run the tests:
 
 ```
 pkg> dev https://github.com/lanceXwq/MinfluxIO.jl
@@ -75,17 +65,11 @@ beads(d)                         # bead (MBM) grid points: gri, xyz, tim, str
 d.attributes                     # measurement metadata (lasers, sequence, grids, ...)
 ```
 
-Loading a 21 MB `.msr` with 725k records takes about 70 ms. Decompression runs
-on several threads when Julia is started with them, e.g. `julia -t auto`.
+Loading a 21 MB `.msr` with 725k records takes about 70 ms. Decompression runs on several threads when Julia is started with them, e.g. `julia -t auto`.
 
-If a file holds several MINFLUX measurements, list them with
-`minflux_measurements(path)` and choose one with
-`load_minflux(path; measurement = 2)` or `measurement = "label"`.
+If a file holds several MINFLUX measurements, list them with `minflux_measurements(path)` and choose one with `load_minflux(path; measurement = 2)` or `measurement = "label"`.
 
-Imspector's MINFLUX exports load the same way and give the same
-`MinfluxData`/`MinfluxTable` as `.msr` files. `.npy` needs nothing extra. `.mat`
-needs [MAT.jl](https://github.com/JuliaIO/MAT.jl), which loads as an optional
-package extension:
+Imspector's MINFLUX exports load the same way and give the same `MinfluxData`/`MinfluxTable` as `.msr` files. `.npy` needs nothing extra. `.mat` needs [MAT.jl](https://github.com/JuliaIO/MAT.jl), which loads as an optional package extension:
 
 ```julia
 d = load_minflux("export.npy")
@@ -94,9 +78,7 @@ using MAT
 d = load_minflux("export.mat")
 ```
 
-An export holds only the localization table. Bead grids, grids and metadata are
-only available from `.msr` files. `read_npy(path)` reads any 1-D `.npy` array
-with its native element types.
+An export holds only the localization table. Bead grids, grids and metadata are only available from `.msr` files. `read_npy(path)` reads any 1-D `.npy` array with its native element types.
 
 ### Images
 
@@ -115,17 +97,13 @@ s.tags["imspector"]               # Imspector XML metadata of that stack
 f.metadata["ome_xml"]             # OME-XML of the whole file
 ```
 
-The first array dimension is the first OBF dimension, usually x. Trailing
-singleton dimensions are kept; remove them with `dropdims`.
+The first array dimension is the first OBF dimension, usually x. Trailing singleton dimensions are kept; remove them with `dropdims`.
 
 ## Data fields
 
-Standard MINFLUX fields get the same Julia types whatever file they came from.
-Integer fields become `Int`, so `diff(t.tid)` cannot wrap around. `Float16`
-fields become `Float32`, because `Float16` sums overflow at 65504.
+Standard MINFLUX fields get the same Julia types whatever file they came from. Integer fields become `Int`, so `diff(t.tid)` cannot wrap around. `Float16` fields become `Float32`, because `Float16` sums overflow at 65504.
 
-The meanings below are those commonly documented for Imspector MINFLUX
-exports. Check Abberior's documentation for your software version.
+The meanings below are those commonly documented for Imspector MINFLUX exports. Check Abberior's documentation for your software version.
 
 | field | type | meaning |
 |---|---|---|
@@ -151,29 +129,13 @@ Fields beyond these are kept, converted by the same rules.
 
 ## How the file format is read
 
-**Exports.** `.npy` files are read following NumPy's
-[format specification](https://numpy.org/doc/stable/reference/generated/numpy.lib.format.html),
-and `.mat` files through MAT.jl. No Imspector-written `.npy` file was available
-during development. The reader is tested against files written by NumPy itself
-with Imspector's MINFLUX field types, including a copy of a real measurement,
-which loaded identically to the `.msr` it came from.
+**Exports.** `.npy` files are read following NumPy's [format specification](https://numpy.org/doc/stable/reference/generated/numpy.lib.format.html), and `.mat` files through MAT.jl. No Imspector-written `.npy` file was available during development. The reader is tested against files written by NumPy itself with Imspector's MINFLUX field types, including a copy of a real measurement, which loaded identically to the `.msr` it came from.
 
-**`.msr` files.** These have two layers, and only one of them follows a
-published spec.
+**`.msr` files.** These have two layers, and only one of them follows a published spec.
 
-**Documented: the OBF container.** `.msr` files are OBF files with extra
-Imspector data appended. The file header, the stack chain, the stack footer
-(units, dimension labels, tag dictionary), the data types and the zlib
-compression all follow Abberior's
-[file format documentation](https://imspectordocs.readthedocs.io/en/latest/fileformat.html).
-The Imspector-specific data after the OBF metadata section (window layout,
-hardware configuration) is not read.
+**Documented: the OBF container.** `.msr` files are OBF files with extra Imspector data appended. The file header, the stack chain, the stack footer (units, dimension labels, tag dictionary), the data types and the zlib compression all follow Abberior's [file format documentation](https://imspectordocs.readthedocs.io/en/latest/fileformat.html). The Imspector-specific data after the OBF metadata section (window layout, hardware configuration) is not read.
 
-**Not documented: the MINFLUX data block.** Imspector 16.3 and later store
-MINFLUX data as a stack that is labelled as an unnamed `UInt8` image but holds
-a binary block starting with `MFXDTA`. This format is not publicly documented.
-Its layout was inferred from example files written by Imspector 2026.7
-(MINFLUX build) and may change between Imspector versions:
+**Not documented: the MINFLUX data block.** Imspector 16.3 and later store MINFLUX data as a stack that is labelled as an unnamed `UInt8` image but holds a binary block starting with `MFXDTA`. This format is not publicly documented. Its layout was inferred from example files written by Imspector 2026.7 (MINFLUX build) and may change between Imspector versions:
 
 ```
 "MFXDTA\0"       magic (7 bytes)
@@ -185,35 +147,25 @@ records          until a zero length:
                    UInt8 is_directory, and for files: UInt64 m, m bytes content
 ```
 
-The records form a [Zarr v2](https://zarr.readthedocs.io/en/stable/spec/v2.html)
-store:
+The records form a [Zarr v2](https://zarr.readthedocs.io/en/stable/spec/v2.html) store:
 
-- `zarr/mfx` is the localization table, a structured array with zlib-compressed
-  chunks.
+- `zarr/mfx` is the localization table, a structured array with zlib-compressed chunks.
 - `zarr/grd/*` are the search and bead grids, Blosc/LZ4-compressed.
 - `zarr/mbm/*` holds the drift-correction settings.
 - `.zattrs` files hold the metadata.
 
-The table fields match Imspector's documented `.npy`/`.mat` exports. Lower-level
-access is available through `read_obf`, `read_stack_bytes`, `parse_mfxdta`,
-`read_zarr_array` and `read_zarr_attrs`.
+The table fields match Imspector's documented `.npy`/`.mat` exports. Lower-level access is available through `read_obf`, `read_stack_bytes`, `parse_mfxdta`, `read_zarr_array` and `read_zarr_attrs`.
 
-This reader is unofficial. Other Imspector versions may store the MINFLUX block
-differently. If a file fails to load, please open an issue and include the
-Imspector version (found in `f[i].tags["imspector"]` or in the error).
+This reader is unofficial. Other Imspector versions may store the MINFLUX block differently. If a file fails to load, please open an issue and include the Imspector version (found in `f[i].tags["imspector"]` or in the error).
 
 ## Limitations
 
 - Read-only.
-- OBF stacks stored in chunks (format version 6 chunk positions) and RGB stacks
-  are not supported yet. An informative error is raised for them.
-- Only 1-D Zarr arrays without filters are supported inside MINFLUX blocks. This
-  covers everything seen so far.
-- `.npy`: only 1-D, little-endian arrays without nested structured or object
-  fields.
+- OBF stacks stored in chunks (format version 6 chunk positions) and RGB stacks are not supported yet. An informative error is raised for them.
+- Only 1-D Zarr arrays without filters are supported inside MINFLUX blocks. This covers everything seen so far.
+- `.npy`: only 1-D, little-endian arrays without nested structured or object fields.
 - Older (pre-2025) Imspector MINFLUX export layouts are not supported.
-- Tested on Imspector 2026.7 (MINFLUX build) `.msr` and `.mat` files, and on
-  NumPy-written `.npy` files.
+- Tested on Imspector 2026.7 (MINFLUX build) `.msr` and `.mat` files, and on NumPy-written `.npy` files.
 
 ## Tests
 
@@ -221,13 +173,9 @@ Imspector version (found in `f[i].tags["imspector"]` or in the error).
 using Pkg; Pkg.test("MinfluxIO")
 ```
 
-The tests build small synthetic OBF/MSR, `.npy` and `.mat` files, so no real
-data is needed. They also use a few tiny NumPy-written `.npy` files in
-`test/data/`, generated by `test/data/generate_npy_fixtures.py`.
+The tests build small synthetic OBF/MSR, `.npy` and `.mat` files, so no real data is needed. They also use a few tiny NumPy-written `.npy` files in `test/data/`, generated by `test/data/generate_npy_fixtures.py`.
 
-To also test on your own files, set `MINFLUXIO_TESTDATA` to a directory holding
-them and an `expected.toml` with the values to check. The format is described
-in `test/runtests.jl`, for example:
+To also test on your own files, set `MINFLUXIO_TESTDATA` to a directory holding them and an `expected.toml` with the values to check. The format is described in `test/runtests.jl`, for example:
 
 ```toml
 ["measurement.msr"]
@@ -238,19 +186,13 @@ label = "example_measurement"
 
 ## Benchmarks
 
-[`benchmark/`](benchmark/) has scripts comparing MinfluxIO with a NumPy-based
-Python reader, together with the results so far.
+[`benchmark/`](benchmark/) has scripts comparing MinfluxIO with a NumPy-based Python reader, together with the results so far.
 
 ## Acknowledgments
 
-MinfluxIO.jl was developed in the
-[Ries Lab](https://maxperutzlabs.ac.at/research/research-groups/ries)
-(Jonas Ries, Max Perutz Labs, University of Vienna), where the example MINFLUX
-data used to develop and test the package were also recorded. These data are
-not distributed with the package.
+MinfluxIO.jl was developed in the [Ries Lab](https://maxperutzlabs.ac.at/research/research-groups/ries) (Jonas Ries, Max Perutz Labs, University of Vienna), where the example MINFLUX data used to develop and test the package were also recorded. These data are not distributed with the package.
 
-This project is not affiliated with or endorsed by Abberior Instruments.
-Abberior and Imspector are names of Abberior Instruments GmbH.
+This project is not affiliated with or endorsed by Abberior Instruments. Abberior and Imspector are names of Abberior Instruments GmbH.
 
 ## License
 

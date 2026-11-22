@@ -1,8 +1,6 @@
 # User-facing MINFLUX data types and loaders.
 
-# Element types used for the standard MINFLUX fields, whatever the source file.
-# Integer fields become `Int` (so that e.g. `diff(tid)` cannot wrap around) and
-# Float16 fields become Float32 (Float16 sums overflow at 65504).
+# Element types used for the standard MINFLUX fields, whatever the source file. Integer fields become `Int` (so that e.g. `diff(tid)` cannot wrap around) and Float16 fields become Float32 (Float16 sums overflow at 65504).
 const CANONICAL_TYPES = (
     vld = Bool, fnl = Bool, bot = Bool, eot = Bool,
     sta = Int, tim = Float64, tid = Int, gri = Int, thi = Int, sqi = Int, itr = Int,
@@ -29,13 +27,9 @@ _canonical_columns(cols::NamedTuple) =
 """
     MinfluxTable
 
-Column table of MINFLUX localizations (one row per iteration record). Columns are
-accessed as properties (`t.tim`, `t.loc`, ...); vector-valued fields such as `loc`
-are `n × 3` matrices. Rows can be selected with `t[mask]` or `t[indices]`, and
-`t[i]` returns one row as a `NamedTuple`.
+Column table of MINFLUX localizations (one row per iteration record). Columns are accessed as properties (`t.tim`, `t.loc`, ...); vector-valued fields such as `loc` are `n × 3` matrices. Rows can be selected with `t[mask]` or `t[indices]`, and `t[i]` returns one row as a `NamedTuple`.
 
-Implements the Tables.jl interface (matrix columns are split into `loc_x`,
-`loc_y`, `loc_z`, ...), so `DataFrame(t)` works.
+Implements the Tables.jl interface (matrix columns are split into `loc_x`, `loc_y`, `loc_z`, ...), so `DataFrame(t)` works.
 """
 struct MinfluxTable{NT<:NamedTuple}
     columns::NT
@@ -61,11 +55,7 @@ end
 """
     MinfluxGrid
 
-A grid from a MINFLUX measurement (e.g. the hexagonal search grid `search_0` or
-the bead grids `mbm_0`, `mbm_1` used for drift correction): its `attributes`
-and its `points` (a [`MinfluxTable`](@ref), or `nothing` if the grid has none).
-For bead grids the points are the registered bead positions (`gri` bead id,
-`xyz`, `tim`, `str`).
+A grid from a MINFLUX measurement (e.g. the hexagonal search grid `search_0` or the bead grids `mbm_0`, `mbm_1` used for drift correction): its `attributes` and its `points` (a [`MinfluxTable`](@ref), or `nothing` if the grid has none). For bead grids the points are the registered bead positions (`gri` bead id, `xyz`, `tim`, `str`).
 """
 struct MinfluxGrid
     name::String
@@ -90,8 +80,7 @@ One MINFLUX measurement.
 - `root_attributes`: top-level metadata (e.g. regions of interest)
 - `container`: the raw [`MfxContainer`](@ref), for anything not exposed above
 
-Only `label`, `source` and `table` are available from `.npy`/`.mat` exports; the other
-fields are then `nothing` or empty.
+Only `label`, `source` and `table` are available from `.npy`/`.mat` exports; the other fields are then `nothing` or empty.
 """
 struct MinfluxData
     label::String
@@ -116,9 +105,7 @@ final_localizations(d::MinfluxData) = final_localizations(d.table)
 """
     beads(d::MinfluxData) -> Dict{String,MinfluxTable}
 
-The points of the bead (MBM, drift-correction) grids, per grid name: registered
-bead positions with columns typically `gri` (bead id), `xyz`, `tim` and `str`.
-Whether beads were actually used for correction is recorded in `d.mbm`.
+The points of the bead (MBM, drift-correction) grids, per grid name: registered bead positions with columns typically `gri` (bead id), `xyz`, `tim` and `str`. Whether beads were actually used for correction is recorded in `d.mbm`.
 """
 function beads(d::MinfluxData)
     out = Dict{String,MinfluxTable}()
@@ -197,11 +184,9 @@ function _load_mat end
 """
     load_minflux(path; measurement = nothing) -> MinfluxData
 
-Load MINFLUX data from an Imspector `.msr`/`.obf` file, or from an Imspector
-MINFLUX export as `.npy` or `.mat` (the latter requires `using MAT`).
+Load MINFLUX data from an Imspector `.msr`/`.obf` file, or from an Imspector MINFLUX export as `.npy` or `.mat` (the latter requires `using MAT`).
 
-If an `.msr` file holds several MINFLUX measurements, select one with
-`measurement` (an index or a label, see [`minflux_measurements`](@ref)).
+If an `.msr` file holds several MINFLUX measurements, select one with `measurement` (an index or a label, see [`minflux_measurements`](@ref)).
 """
 function load_minflux(path::AbstractString; measurement = nothing)
     isfile(path) || throw(ArgumentError("no such file: $path"))

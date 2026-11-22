@@ -1,5 +1,4 @@
-# Reader for NumPy .npy files, as written by Imspector's MINFLUX "export as
-# NumPy" (a 1-D structured array with one record per MINFLUX iteration).
+# Reader for NumPy .npy files, as written by Imspector's MINFLUX "export as NumPy" (a 1-D structured array with one record per MINFLUX iteration).
 #
 # Format (documented by NumPy):
 #   https://numpy.org/doc/stable/reference/generated/numpy.lib.format.html
@@ -107,10 +106,7 @@ end
 """
     read_npy(path)
 
-Read a 1-D NumPy `.npy` array with its native element types. A plain dtype gives
-a `Vector`; a structured (record) dtype, as in Imspector's MINFLUX export, gives a
-`NamedTuple` of columns, where fields with a sub-array shape `(k,)` become
-`n × k` matrices. Padding fields are skipped.
+Read a 1-D NumPy `.npy` array with its native element types. A plain dtype gives a `Vector`; a structured (record) dtype, as in Imspector's MINFLUX export, gives a `NamedTuple` of columns, where fields with a sub-array shape `(k,)` become `n × k` matrices. Padding fields are skipped.
 """
 function read_npy(path::AbstractString)
     open(path, "r") do io

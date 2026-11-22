@@ -1,17 +1,12 @@
 # Benchmarks
 
-These scripts measure how fast MinfluxIO loads MINFLUX data from an `.msr` file
-and compare it with a NumPy-based Python reader that decodes the same data.
+These scripts measure how fast MinfluxIO loads MINFLUX data from an `.msr` file and compare it with a NumPy-based Python reader that decodes the same data.
 
 ## Results
 
-**Machine and software:** Apple M1 Pro (8 performance + 2 efficiency cores),
-16 GiB RAM, macOS 27.2. Julia 1.13.4; Python 3.15.2 with NumPy 2.5.5.
+**Machine and software:** Apple M1 Pro (8 performance + 2 efficiency cores), 16 GiB RAM, macOS 27.2. Julia 1.13.4; Python 3.15.2 with NumPy 2.5.5.
 
-**Test file:** a 21 MB `.msr` recorded in the Ries Lab and written by
-Imspector 2026.7 (MINFLUX build). It holds 725,662 MINFLUX records, 10,440 of
-them valid final localizations, plus 14 image stacks. The file is not part of
-this repository.
+**Test file:** a 21 MB `.msr` recorded in the Ries Lab and written by Imspector 2026.7 (MINFLUX build). It holds 725,662 MINFLUX records, 10,440 of them valid final localizations, plus 14 image stacks. The file is not part of this repository.
 
 | | Julia, 1 thread | Julia, 4 threads | Python + NumPy |
 |---|---|---|---|
@@ -24,14 +19,9 @@ this repository.
 
 The two "decode" rows are not quite the same work:
 
-- **Python** reads the file, unpacks the MINFLUX block and decompresses the
-  table into a NumPy structured array. NumPy keeps the records as stored, so the
-  decode ends there.
-- **Julia** does the same and then splits the records into one column per
-  field (about 21 ms). Julia has no equivalent of NumPy's structured arrays for
-  Imspector's packed records, and separate columns make later analysis fast.
-- **Full `load_minflux`** also converts columns to the package's standard
-  types and reads the grids and metadata. Together these add only 1–2 ms.
+- **Python** reads the file, unpacks the MINFLUX block and decompresses the table into a NumPy structured array. NumPy keeps the records as stored, so the decode ends there.
+- **Julia** does the same and then splits the records into one column per field (about 21 ms). Julia has no equivalent of NumPy's structured arrays for Imspector's packed records, and separate columns make later analysis fast.
+- **Full `load_minflux`** also converts columns to the package's standard types and reads the grids and metadata. Together these add only 1–2 ms.
 
 Where the time goes, single-threaded:
 
@@ -43,9 +33,7 @@ Where the time goes, single-threaded:
 
 ## History
 
-The first version of the package (commit `10bee5f`) took 203 ms to decode the
-table and allocated 638 MiB per load. Its first call in a session took 3.2 s.
-Four changes brought it to the numbers above:
+The first version of the package (commit `10bee5f`) took 203 ms to decode the table and allocated 638 MiB per load. Its first call in a session took 3.2 s. Four changes brought it to the numbers above:
 
 | Commit | Change | Effect |
 |---|---|---|
@@ -56,8 +44,7 @@ Four changes brought it to the numbers above:
 
 ## Running the benchmarks
 
-Julia, from the repository root (run each in a fresh process, because the first
-measurement is the first call in the session):
+Julia, from the repository root (run each in a fresh process, because the first measurement is the first call in the session):
 
 ```sh
 julia --project=benchmark -e 'using Pkg; Pkg.instantiate()'

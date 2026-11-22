@@ -2,10 +2,7 @@
 
     python benchmark/bench_python.py path/to/file.msr [repetitions]
 
-Does the same decoding as MinfluxIO's `decode table` step: walks the OBF stack
-chain, finds the MINFLUX ("MFXDTA") block, unpacks the embedded Zarr store and
-decodes the `zarr/mfx` record array into a NumPy structured array. It does not
-split the records into columns, convert types, or read grids and metadata.
+Does the same decoding as MinfluxIO's `decode table` step: walks the OBF stack chain, finds the MINFLUX ("MFXDTA") block, unpacks the embedded Zarr store and decodes the `zarr/mfx` record array into a NumPy structured array. It does not split the records into columns, convert types, or read grids and metadata.
 """
 import json
 import statistics
