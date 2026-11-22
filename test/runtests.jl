@@ -118,6 +118,18 @@ const TESTDATA = get(ENV, "MINFLUXIO_TESTDATA", "")
         end
         raw = read_npy(joinpath(tmp, "export_v1.npy"))
         @test raw.cfr isa Vector{Float16} && raw.tid isa Vector{UInt32}         # native types
+        # conversion during extraction: uint8 flags -> Bool, uint32 -> Int, sub-array kept
+        pconv = joinpath(tmp, "convert.npy")
+        recs = UInt8[]
+        for (v, t) in ((0x00, 7), (0x01, 8), (0x02, 9))
+            append!(recs, [v], le(UInt32(t)), le(1.0t), le(2.0t))
+        end
+        write(pconv, npy_bytes("[('vld', '|u1'), ('tim', '<u4'), ('xyz', '<f8', (2,))]", 3, recs))
+        tc = load_minflux(pconv).table
+        @test tc.vld == [false, true, true] && tc.vld isa Vector{Bool}
+        @test tc.tim == [7.0, 8.0, 9.0] && tc.tim isa Vector{Float64}           # canonical: Float64
+        @test tc.xyz == [7.0 14.0; 8.0 16.0; 9.0 18.0]
+        @test read_npy(pconv).vld == UInt8[0, 1, 2]                             # native unchanged
         # files written by NumPy itself (see test/data/generate_npy_fixtures.py)
         data = joinpath(@__DIR__, "data")
         @test check(load_minflux(joinpath(data, "numpy_mfx_v1.npy")).table)

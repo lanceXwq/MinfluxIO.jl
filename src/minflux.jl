@@ -18,6 +18,7 @@ _default_type(::Type{T}) where {T} = T
 function _canonical_column(name::Symbol, col::AbstractArray)
     col isa AbstractMatrix && size(col, 2) == 1 && (col = vec(col))
     T = haskey(CANONICAL_TYPES, name) ? CANONICAL_TYPES[name] : _default_type(eltype(col))
+    col isa Array{T} && return col                      # already the right type: no copy
     T === Bool && return Array{Bool}(map(!iszero, col))
     return Array{T}(col)
 end

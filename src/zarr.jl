@@ -82,14 +82,41 @@ function _fill_bytes(fill, itemsize::Int, T)
     return Vector{UInt8}(reinterpret(UInt8, [htol(v)]))
 end
 
-function _extract_field(M::AbstractMatrix{UInt8}, f::ZarrField)
-    n = size(M, 2)
-    bytes = vec(M[f.offset+1:f.offset+f.nbytes, :])
-    vals = f.T === Bool ? map(!iszero, bytes) : copy(reinterpret(f.T, bytes))
-    ENDIAN_BOM == 0x04030201 || f.T === Bool || (vals = ltoh.(vals))
-    f.shape == () && return vals
-    k = prod(f.shape)
-    return permutedims(reshape(vals, k, n))  # n × k (sub-array flattened, C order)
+# Copy rows `lo:hi` of a field (starting `offset` bytes into each record, `k`
+# values per record) from the packed records in `buf` into `out`, which holds the
+# column as an n × k matrix in column-major order (sub-arrays flattened in C
+# order). Values are read directly from the record buffer; unaligned loads are
+# fine because `unsafe_load` uses alignment 1.
+function _extract_rows!(out::Vector{T}, buf::Vector{UInt8}, itemsize::Int, n::Int,
+        offset::Int, k::Int, lo::Int, hi::Int) where {T}
+    GC.@preserve buf begin
+        base = pointer(buf) + offset
+        for j in 1:k
+            p = Ptr{T}(base + (j - 1) * sizeof(T))
+            o = (j - 1) * n
+            @inbounds for i in lo:hi
+                out[o+i] = ltoh(unsafe_load(p + (i - 1) * itemsize))
+            end
+        end
+    end
+    return out
+end
+
+function _extract_rows!(out::Vector{Bool}, buf::Vector{UInt8}, itemsize::Int, n::Int,
+        offset::Int, k::Int, lo::Int, hi::Int)
+    for j in 1:k
+        o = (j - 1) * n
+        s = offset + j
+        @inbounds for i in lo:hi
+            out[o+i] = buf[s+(i-1)*itemsize] != 0x00
+        end
+    end
+    return out
+end
+
+function _extract_field(::Type{T}, buf::Vector{UInt8}, itemsize::Int, n::Int, offset::Int, k::Int) where {T}
+    n * itemsize <= length(buf) || throw(BoundsError(buf, n * itemsize))
+    return _extract_rows!(Vector{T}(undef, n * k), buf, itemsize, n, offset, k, 1, n)
 end
 
 """
@@ -166,15 +193,22 @@ function _foreach_maybe_threaded(f, itr)
     return nothing
 end
 
-# Decode `n` packed records of a (plain or structured) dtype from `buf`.
-function _decode_records(buf::AbstractVector{UInt8}, fields, itemsize::Int, n::Int, T)
+# Decode `n` packed records of a (plain or structured) dtype from the start of `buf`.
+function _decode_records(buf::Vector{UInt8}, fields, itemsize::Int, n::Int, T)
     length(buf) >= n * itemsize || error("not enough data: expected $(n * itemsize) bytes, got $(length(buf))")
-    buf = view(buf, 1:n*itemsize)
-    if fields === nothing
-        v = T === Bool ? map(!iszero, buf) : copy(reinterpret(T, buf))
-        return ENDIAN_BOM == 0x04030201 || T === Bool ? v : ltoh.(v)
+    fields === nothing && return _extract_field(T, buf, itemsize, n, 0, 1)
+    ks = [prod(f.shape) for f in fields]
+    cols = [Vector{f.T}(undef, n * k) for (f, k) in zip(fields, ks)]
+    # Work through the records in cache-sized blocks, extracting every field from
+    # one block before moving on, instead of one full pass over `buf` per field.
+    block = max(1, (256 * 1024) ÷ itemsize)
+    for lo in 1:block:n
+        hi = min(n, lo + block - 1)
+        for (f, k, col) in zip(fields, ks, cols)
+            _extract_rows!(col, buf, itemsize, n, f.offset, k, lo, hi)
+        end
     end
-    M = reshape(buf, itemsize, n)
     names = Tuple(f.name for f in fields)
-    return NamedTuple{names}(Tuple(_extract_field(M, f) for f in fields))
+    return NamedTuple{names}(Tuple(f.shape == () ? col : reshape(col, n, k)
+                                   for (f, k, col) in zip(fields, ks, cols)))
 end

@@ -41,7 +41,7 @@ Unpack an embedded MINFLUX data block (the decompressed bytes of an OBF stack wh
 `kind` is `:minflux`).
 """
 function parse_mfxdta(bytes::AbstractVector{UInt8})
-    bytes = Vector{UInt8}(bytes)
+    bytes isa Vector{UInt8} || (bytes = Vector{UInt8}(bytes))
     nm = length(MFXDTA_MAGIC)
     (length(bytes) >= nm + 8 && view(bytes, 1:nm) == MFXDTA_MAGIC) ||
         throw(ArgumentError("not a MINFLUX data block (missing MFXDTA magic)"))
