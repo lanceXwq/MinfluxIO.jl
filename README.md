@@ -14,9 +14,36 @@ files, Imspector's MINFLUX `.npy` and `.mat` exports, and the image stacks of
 
 ## Installation
 
+MinfluxIO needs Julia 1.10 or newer. It is tested on Linux, macOS and Windows.
+The package is not yet in Julia's General registry, so install it from its
+GitHub URL. In the Julia REPL, press `]` to enter package mode, then run:
+
+```
+pkg> add https://github.com/lanceXwq/MinfluxIO.jl
+```
+
+Or, equivalently, in a script:
+
 ```julia
 using Pkg
-Pkg.add(url = "https://github.com/lanceXwq/MinfluxIO.jl")   # not registered yet
+Pkg.add(url = "https://github.com/lanceXwq/MinfluxIO.jl")
+```
+
+Optional packages:
+
+- [MAT.jl](https://github.com/JuliaIO/MAT.jl) to read `.mat` exports:
+  `pkg> add MAT`
+- [DataFrames.jl](https://github.com/JuliaData/DataFrames.jl) to work with the
+  localization table as a `DataFrame`: `pkg> add DataFrames`
+
+To update to the latest version on GitHub, run `pkg> update MinfluxIO`.
+
+To work on the package itself, clone it as a development copy (to
+`~/.julia/dev/MinfluxIO` by default) and run the tests:
+
+```
+pkg> dev https://github.com/lanceXwq/MinfluxIO.jl
+pkg> test MinfluxIO
 ```
 
 ## Usage
